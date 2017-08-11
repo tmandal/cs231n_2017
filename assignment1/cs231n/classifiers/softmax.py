@@ -30,7 +30,27 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_classes = W.shape[1]
+  num_train = X.shape[0]
+  dscores = np.zeros((num_train, num_classes))
+  for i in xrange(num_train):
+    x_times_W = X[i].dot(W)
+    exp_of_x_times_W = np.exp(x_times_W - np.max(x_times_W))
+    softmax = exp_of_x_times_W / np.sum(exp_of_x_times_W)
+    loss += - np.log(softmax[y[i]])
+
+    one_hot_y = np.zeros(num_classes)
+    one_hot_y[y[i]] = 1.0
+    dscores[i] = (softmax - one_hot_y)
+
+  # Right now the loss is a sum over all training examples, but we want it
+  # to be an average instead so we divide by num_train.
+  loss /= num_train
+  dW = np.dot(X.T, dscores) / num_train
+
+  # Add regularization to the loss.
+  loss += 0.5 * reg * np.sum(W * W)
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -54,7 +74,22 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_classes = W.shape[1]
+  num_train = X.shape[0]
+
+  scores = X.dot(W)
+  exp_of_scores = np.exp(scores - np.reshape(np.max(scores, axis=1), (-1, 1)))
+  softmax = exp_of_scores / np.reshape(np.sum(exp_of_scores, axis=1), (-1, 1))
+  loss = np.mean(-np.log(softmax[np.arange(num_train), y]))
+
+  dscores = softmax
+  dscores[np.arange(num_train), y] -= 1
+  dW = np.dot(X.T, dscores) / num_train
+
+  # Add regularization to the loss.
+  loss += 0.5 * reg * np.sum(W * W)
+  dW += reg * W
+
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
